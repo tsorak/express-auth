@@ -34,7 +34,18 @@ const sendForm = async (data, method) => {
 		const data = await response.json();
 		console.log(data);
 	} catch (error) {
-		setStatus(error.status === 400 ? error.statusText : "Something went wrong!");
+		switch (error.status) {
+			case 400:
+				setStatus(error.statusText);
+				break;
+			case 409:
+				setStatus("Email taken!");
+				break;
+			default:
+				setStatus("Something went wrong!");
+				break;
+		}
+
 		console.error(error);
 	}
 };
