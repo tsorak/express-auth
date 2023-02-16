@@ -33,4 +33,10 @@ function getUsers() {
 	return database.users.map((user) => ({ id: user.id, email: user.email }));
 }
 
-export { addUser, existsUser, isCorrectUserDetails, getUsers };
+function getUserId(email: string) {
+	const user = database.users.find((user) => user.email === email);
+	if (!user) throw new Error("User does not exist");
+	return user.id;
+}
+
+export { addUser, existsUser, isCorrectUserDetails, getUsers, getUserId };

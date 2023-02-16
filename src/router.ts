@@ -1,8 +1,8 @@
 import { Router, Response, Request } from "express";
 
 import { parseBodyAsJson } from "./utils";
-import { existsUser, isCorrectUserDetails, addUser, getUsers } from "./database";
-import { isAuthorised } from "./authorisation";
+import { existsUser, isCorrectUserDetails, addUser, getUsers, getUserId } from "./database";
+import { generateAccessToken, isAuthorised } from "./authorisation";
 
 const router = Router();
 
@@ -30,8 +30,14 @@ router.patch("/", parseBodyAsJson(), (req: Request, res: Response) => {
 		return res.end();
 	}
 
-	res.cookie("accessToken", "super-secret-token", { maxAge: 1000 * 60 * 60 * 24 * 7, path: "/" });
-	res.status(200).json({ email, password });
+	try {
+		const userId = getUserId(email);
+		res.cookie("accessToken", generateAccessToken(userId), { maxAge: 1000 * 60 * 60, path: "/" });
+		res.status(200).json({ email, password });
+	} catch (error) {
+		res.status(500).statusMessage = "Internal server error";
+		return res.end();
+	}
 });
 
 router.post("/", parseBodyAsJson(), (req: Request, res: Response) => {
@@ -49,7 +55,7 @@ router.post("/", parseBodyAsJson(), (req: Request, res: Response) => {
 	}
 
 	const addedUser = addUser({ email, password });
-	res.cookie("accessToken", "super-secret-token", { maxAge: 1000 * 60 * 60 * 24 * 7, path: "/" });
+	res.cookie("accessToken", generateAccessToken(addedUser.id), { maxAge: 1000 * 60 * 60, path: "/" });
 	res.status(201).json(addedUser);
 });
 
