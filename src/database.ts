@@ -1,3 +1,5 @@
+import * as bcrypt from "bcrypt";
+
 interface User {
 	email: string;
 	password: string;
@@ -8,12 +10,15 @@ const database = {
 		{
 			id: 1,
 			email: "john.doe@mail.com",
-			password: "123456"
+			password: bcrypt.hashSync("123", 10)
 		}
 	]
 };
 
 function addUser(user: User) {
+	const { password } = user;
+	user.password = bcrypt.hashSync(password, 10);
+
 	const addedUser = { id: database.users.length + 1, ...user };
 	database.users.push(addedUser);
 	return { id: addedUser.id, email: addedUser.email };
@@ -26,11 +31,11 @@ function existsUser(email: string) {
 function isCorrectUserDetails(email: string, password: string) {
 	const user = database.users.find((user) => user.email === email);
 	if (!user) return false; // User does not exist
-	return user.password === password;
+	return bcrypt.compareSync(password, user.password);
 }
 
 function getUsers() {
-	return database.users.map((user) => ({ id: user.id, email: user.email }));
+	return database.users;
 }
 
 function getUserId(email: string) {
