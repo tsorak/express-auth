@@ -8,4 +8,10 @@ function logRequest(req: Request, res: Response, next: NextFunction) {
 
 const parseBodyAsJson = () => bodyParser.json();
 
-export { logRequest, parseBodyAsJson };
+const parseCookies = (request: Request): { [cookie: string]: string } => {
+	const cookieHeader = request.headers.cookie;
+	if (!cookieHeader) return {};
+	return Object.fromEntries(cookieHeader.split(";").map((pair) => pair.trim().split("=")));
+};
+
+export { logRequest, parseBodyAsJson, parseCookies };

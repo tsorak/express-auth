@@ -29,4 +29,8 @@ function isCorrectUserDetails(email: string, password: string) {
 	return user.password === password;
 }
 
-export { addUser, existsUser, isCorrectUserDetails };
+function getUsers() {
+	return database.users.map((user) => ({ id: user.id, email: user.email }));
+}
+
+export { addUser, existsUser, isCorrectUserDetails, getUsers };

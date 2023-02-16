@@ -6,8 +6,8 @@ import apiRouter from "./router";
 const app: Express = express();
 
 app.use(logRequest);
-app.use(express.static("public"));
 app.use(apiRouter);
+app.use(express.static("public"));
 
 app.listen(3000, () => {
 	console.clear();
