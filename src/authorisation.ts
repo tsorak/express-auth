@@ -9,18 +9,16 @@ const generateAccessToken = (userId: string | number): string => {
 	return sign({ userId }, key, { expiresIn: "1h" });
 };
 
-const isAuthorised = (req: Request): boolean => {
+const decodeAccessToken = (req: Request): { payload?: unknown; error?: string } => {
 	const { accessToken } = parseCookies(req);
-	if (!accessToken) return false;
+	if (!accessToken) return { error: "No access token provided" };
 
 	try {
 		const decoded = verify(accessToken, key);
-		console.log("Token payload: ", decoded);
-		return true;
+		return { payload: decoded };
 	} catch (err) {
-		console.log("Invalid token");
-		return false;
+		return { error: "Invalid token" };
 	}
 };
 
-export { isAuthorised, generateAccessToken };
+export { decodeAccessToken, generateAccessToken };

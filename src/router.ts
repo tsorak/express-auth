@@ -1,72 +1,22 @@
-import { Router, Response, Request } from "express";
+import { Router } from "express";
 
 import { parseBodyAsJson } from "./utils";
-import { existsUser, isCorrectUserDetails, addUser, getUsers, getUserId } from "./database";
-import { generateAccessToken, isAuthorised } from "./authorisation";
+
+import { loginController } from "./controller/login";
+import { registerController } from "./controller/register";
+import { usersController } from "./controller/users";
+import { isAuthorised } from "./middleware/isAuthorised";
 
 const router = Router();
 
-//TODO: BCRYPT
-//TODO: JWT
 //TODO: SQLITE
 
 //Authentication
-router.patch("/", parseBodyAsJson(), (req: Request, res: Response) => {
-	const { email, password } = req.body;
-	console.log("Login attempt using:", { email, password });
+router.patch("/", parseBodyAsJson(), loginController);
 
-	if (!email || !password) {
-		res.status(400).statusMessage = "Missing email or password";
-		return res.end();
-	}
-
-	if (!existsUser(email)) {
-		res.status(400).statusMessage = "User does not exist";
-		return res.end();
-	}
-
-	if (!isCorrectUserDetails(email, password)) {
-		res.status(400).statusMessage = "Invalid password";
-		return res.end();
-	}
-
-	try {
-		const userId = getUserId(email);
-		res.cookie("accessToken", generateAccessToken(userId), { maxAge: 1000 * 60 * 60, path: "/" });
-		res.status(200).json({ email, password });
-	} catch (error) {
-		res.status(500).statusMessage = "Internal server error";
-		return res.end();
-	}
-});
-
-router.post("/", parseBodyAsJson(), (req: Request, res: Response) => {
-	const { email, password } = req.body;
-	console.log("Registration attempt using:", { email, password });
-
-	if (!email || !password) {
-		res.status(400).statusMessage = "Missing email or password";
-		return res.end();
-	}
-
-	if (existsUser(email)) {
-		res.status(409).statusMessage = "User already exists";
-		return res.end();
-	}
-
-	const addedUser = addUser({ email, password });
-	res.cookie("accessToken", generateAccessToken(addedUser.id), { maxAge: 1000 * 60 * 60, path: "/" });
-	res.status(201).json(addedUser);
-});
+router.post("/", parseBodyAsJson(), registerController);
 
 //Logged in state
-router.get("/users", (req: Request, res: Response) => {
-	if (!isAuthorised(req)) {
-		res.status(401).statusMessage = "User is not logged in";
-		return res.end();
-	}
-
-	return res.send(JSON.stringify(getUsers())).end();
-});
+router.get("/users", isAuthorised, usersController);
 
 export default router;
